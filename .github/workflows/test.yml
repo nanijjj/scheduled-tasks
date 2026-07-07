@@ -17,17 +17,17 @@ jobs:
           pip install -r requirements.txt
       - name: Check secrets are configured
         env:
-          rain_api_key: ${{ secrets.rain_api_key }}
-          rain_bot_token: ${{ secrets.rain_bot_token }}
+          RAIN_API_KEY: ${{ secrets.RAIN_API_KEY }}
+          RAIN_BOT_TOKEN: ${{ secrets.RAIN_BOT_TOKEN }}
         run: |
-          if [ -z "$rain_api_key" ]; then
+          if [ -z "$RAIN_API_KEY" ]; then
             echo "rain_api_key secret is not set!"
             echo "Go to Settings > Secrets > Actions and add it."
             exit 1
           else
             echo "rain_api_key is configured"
           fi
-          if [ -z "$rain_bot_token" ]; then
+          if [ -z "$RAIN_BOT_TOKEN" ]; then
             echo "rain_bot_token secret is not set!"
             echo "Go to Settings > Secrets > Actions and add it."
             exit 1
