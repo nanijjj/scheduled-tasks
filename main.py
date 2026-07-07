@@ -7,7 +7,7 @@ api_key = os.getenv("rain_api_key")
 
 
 
-response = requests.get("https://api.openweathermap.org/data/2.5/forecast", params={"lat":54.036755, "lon":22.502927,"appid":api_key,"cnt":4})
+response = requests.get("https://api.openweathermap.org/data/2.5/forecast", params={"lat":49.142693, "lon":9.210879,"appid":api_key,"cnt":4})
 
 response.raise_for_status()
 data = response.json()
