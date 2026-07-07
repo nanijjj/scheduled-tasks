@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv("C:/Users/PCUser/Documents/.env")
-api_key = os.getenv("rain_api_key")
+api_key = os.getenv("RAIN_API_KEY")
 
 
 
@@ -21,7 +21,7 @@ def will_rain(id_codes:list):
     return False
 
 def telegram_bot_sendtext(bot_message):
-    bot_token = os.getenv("rain_bot_token")
+    bot_token = os.getenv("RAIN_BOT_TOKEN")
     bot_chatID = '8847528871'
     send_text = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
