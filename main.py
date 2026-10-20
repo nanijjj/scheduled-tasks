@@ -1,45 +1,53 @@
-import requests
-from dotenv import load_dotenv
 import os
+import requests
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
-load_dotenv("C:/Users/PCUser/Documents/.env")
-api_key = os.getenv("RAIN_API_KEY")
-
-
-
-response = requests.get("https://api.openweathermap.org/data/2.5/forecast", params={"lat":49.142693, "lon":9.210879,"appid":api_key,"cnt":4})
-
-response.raise_for_status()
-data = response.json()
-
-weather_data = data["list"]
-
-def will_rain(id_codes:list):
-    for id_entry in id_codes:
-        if id_entry < 700:
-            return True
-    return False
-
-def telegram_bot_sendtext(bot_message):
-    bot_token = os.getenv("RAIN_BOT_TOKEN")
-    bot_chatID = '8847528871'
-    send_text = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-
-    response = requests.get(send_text,params={"parse_mode": "Markdown","chat_id":bot_chatID,"text":bot_message})
-
-    return response.json()
-
-list_of_codes = []
-for entry in weather_data:
-    desc = entry["weather"][0]
-    id_code = desc["id"]
-    list_of_codes.append(id_code)
+USERNAME = "keko911"
+GRAPH_ID = "graph1"
+PIXELA_TOKEN = os.getenv("USER_TOKEN")
+BOT_TOKEN = os.getenv("RAIN_BOT_TOKEN")
+CHAT_ID = 8847528871
+TG = f"https://api.telegram.org/bot{BOT_TOKEN}"
+PIXEL_ENDPOINT = f"https://pixe.la/v1/users/{USERNAME}/graphs/{GRAPH_ID}"
 
 
+def hole_antworten():
+    updates = requests.get(f"{TG}/getUpdates").json()["result"]
+    antworten = []
+    for u in updates:
+        msg = u.get("message")
+        if not msg or msg["chat"]["id"] != CHAT_ID:
+            continue
+        text = msg.get("text", "").strip().replace(",", ".")
+        try:
+            stunden = float(text)
+        except ValueError:
+            continue  # alles, was keine Zahl ist, ignorieren
+        datum = datetime.fromtimestamp(msg["date"], ZoneInfo("Europe/Berlin")).strftime("%Y%m%d")
+        antworten.append((datum, stunden))
 
-if will_rain(list_of_codes):
-    telegram_bot_sendtext("It's going to rain!")
-else:
-    telegram_bot_sendtext("It will not rain in the next 12 hours!")
+    # Updates als gelesen markieren, damit sie beim nächsten Lauf nicht nochmal kommen
+    if updates:
+        requests.get(f"{TG}/getUpdates", params={"offset": updates[-1]["update_id"] + 1})
+    return antworten
 
 
+def trage_ein(datum, stunden):
+    r = requests.put(
+        f"{PIXEL_ENDPOINT}/{datum}",
+        json={"quantity": str(stunden)},
+        headers={"X-USER-TOKEN": PIXELA_TOKEN},
+    )
+    print(datum, stunden, r.text)
+
+
+def sende(text):
+    requests.get(f"{TG}/sendMessage", params={"chat_id": CHAT_ID, "text": text})
+
+
+for datum, stunden in hole_antworten():
+    trage_ein(datum, stunden)
+
+sende("Hey, ein weiterer Tag ist um. Wie viele Stunden hast du gelernt?\n"
+      f"Stand: {PIXEL_ENDPOINT}.html")
