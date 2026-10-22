@@ -25,29 +25,34 @@ def hole_antworten():
         except ValueError:
             continue  # alles, was keine Zahl ist, ignorieren
         datum = datetime.fromtimestamp(msg["date"], ZoneInfo("Europe/Berlin")).strftime("%Y%m%d")
-        antworten.append((datum, stunden))
+        antworten.append((datum, stunden,u["update_id"]))
 
-    # Updates als gelesen markieren, damit sie beim nächsten Lauf nicht nochmal kommen
-    if updates:
-        requests.get(f"{TG}/getUpdates", params={"offset": updates[-1]["update_id"] + 1})
+
     return antworten
 
 
 def trage_ein(datum, stunden):
-    r = requests.put(
-        f"{PIXEL_ENDPOINT}/{datum}",
-        json={"quantity": str(stunden)},
-        headers={"X-USER-TOKEN": PIXELA_TOKEN},
-    )
-    print(datum, stunden, r.text)
+    for _ in range(25):
+        r = requests.put(
+            f"{PIXEL_ENDPOINT}/{datum}",
+            json={"quantity": str(stunden)},
+            headers={"X-USER-TOKEN": PIXELA_TOKEN},
+
+        )
+        if r.json()["isSuccess"]:
+            print(datum, stunden, r.text)
+            return True
+    return False
 
 
 def sende(text):
     requests.get(f"{TG}/sendMessage", params={"chat_id": CHAT_ID, "text": text})
 
 
-for datum, stunden in hole_antworten():
-    trage_ein(datum, stunden)
+for datum, stunden,update_id in hole_antworten():
+    if trage_ein(datum, stunden):
+        # Updates als gelesen markieren, damit sie beim nächsten Lauf nicht nochmal kommen
+        requests.get(f"{TG}/getUpdates", params={"offset": update_id + 1})
 
 sende("Hey, ein weiterer Tag ist um. Wie viele Stunden hast du gelernt?\n"
       f"Stand: {PIXEL_ENDPOINT}.html")
