@@ -41,6 +41,7 @@ jobs:
         env:
           # Your secrets are available as environment variables
           # Add more secrets in Settings > Secrets > Actions
+          USER_TOKEN: ${{ secrets.USER_TOKEN }}
           RAIN_API_KEY: ${{ secrets.RAIN_API_KEY }}
           RAIN_BOT_TOKEN: ${{ secrets.RAIN_BOT_TOKEN }}
         run: python main.py
